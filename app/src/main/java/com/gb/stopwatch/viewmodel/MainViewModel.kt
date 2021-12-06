@@ -1,9 +1,14 @@
-package com.gb.stopwatch
+package com.gb.stopwatch.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.gb.stopwatch.StopwatchListOrchestrator.Companion.DEFAULT_TIME
+import com.gb.stopwatch.usecase.StopwatchStateCalculator
+import com.gb.stopwatch.repos.TimestampProviderImpl
+import com.gb.stopwatch.usecase.StopwatchListOrchestrator
+import com.gb.stopwatch.usecase.StopwatchListOrchestrator.Companion.DEFAULT_TIME
+import com.gb.stopwatch.usecase.StopwatchStateHolder
+import com.gb.stopwatch.usecase.TimestampMillisecondsFormatter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -14,14 +19,11 @@ class MainViewModel : ViewModel() {
     private var mutableTimeLiveData: MutableLiveData<String> = MutableLiveData(DEFAULT_TIME)
     val timeLiveData : LiveData<String> = mutableTimeLiveData
 
-    private val timestampProvider = object : TimestampProvider {
-        override fun getMilliseconds() = System.currentTimeMillis()
-    }
+    private val timestampProvider = TimestampProviderImpl()
 
     private val stopwatchListOrchestrator = StopwatchListOrchestrator(
         StopwatchStateHolder(
-            StopwatchStateCalculator(timestampProvider, ElapsedTimeCalculator(timestampProvider)),
-            ElapsedTimeCalculator(timestampProvider),
+            StopwatchStateCalculator(timestampProvider),
             TimestampMillisecondsFormatter()
         ),
         CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -29,15 +31,13 @@ class MainViewModel : ViewModel() {
 
     init {
         CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
-            stopwatchListOrchestrator.ticker.collect { mutableTimeLiveData.postValue(it) }
+            stopwatchListOrchestrator.ticker.collect {
+                mutableTimeLiveData.postValue(it)
+            }
         }
     }
 
     fun onStartClicked() { stopwatchListOrchestrator.start() }
     fun onPauseClicked() { stopwatchListOrchestrator.pause() }
     fun onStopClicked() { stopwatchListOrchestrator.stop() }
-}
-
-interface TimestampProvider {
-    fun getMilliseconds(): Long
 }

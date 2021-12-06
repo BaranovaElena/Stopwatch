@@ -1,8 +1,9 @@
-package com.gb.stopwatch
+package com.gb.stopwatch.usecase
+
+import com.gb.stopwatch.entites.StopwatchState
 
 class StopwatchStateHolder(
     private val stopwatchStateCalculator: StopwatchStateCalculator,
-    private val elapsedTimeCalculator: ElapsedTimeCalculator,
     private val timestampMillisecondsFormatter: TimestampMillisecondsFormatter
 ) {
     var currentState: StopwatchState = StopwatchState.Paused(0)
@@ -23,7 +24,7 @@ class StopwatchStateHolder(
     fun getStringTimeRepresentation(): String {
         val elapsedTime = when (val currentState = currentState) {
             is StopwatchState.Paused -> currentState.elapsedTime
-            is StopwatchState.Running -> elapsedTimeCalculator.calculate(currentState)
+            is StopwatchState.Running -> stopwatchStateCalculator.calculateElapsed(currentState)
         }
         return timestampMillisecondsFormatter.format(elapsedTime)
     }

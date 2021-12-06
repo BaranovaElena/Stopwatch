@@ -1,9 +1,9 @@
-package com.gb.stopwatch
+package com.gb.stopwatch.usecase
 
-class StopwatchStateCalculator(
-    private val timestampProvider: TimestampProvider,
-    private val elapsedTimeCalculator: ElapsedTimeCalculator,
-) {
+import com.gb.stopwatch.entites.StopwatchState
+import com.gb.stopwatch.repos.TimestampProvider
+
+class StopwatchStateCalculator(private val timestampProvider: TimestampProvider) {
     fun calculateRunningState(oldState: StopwatchState): StopwatchState.Running =
         when (oldState) {
             is StopwatchState.Running -> oldState
@@ -18,9 +18,19 @@ class StopwatchStateCalculator(
     fun calculatePausedState(oldState: StopwatchState): StopwatchState.Paused =
         when (oldState) {
             is StopwatchState.Running -> {
-                val elapsedTime = elapsedTimeCalculator.calculate(oldState)
+                val elapsedTime = calculateElapsed(oldState)
                 StopwatchState.Paused(elapsedTime = elapsedTime)
             }
             is StopwatchState.Paused -> oldState
         }
+
+    fun calculateElapsed(state: StopwatchState.Running): Long {
+        val currentTimestamp = timestampProvider.getMilliseconds()
+        val timePassedSinceStart = if (currentTimestamp > state.startTime) {
+            currentTimestamp - state.startTime
+        } else {
+            0
+        }
+        return timePassedSinceStart + state.elapsedTime
+    }
 }

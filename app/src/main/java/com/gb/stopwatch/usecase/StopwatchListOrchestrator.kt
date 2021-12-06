@@ -1,4 +1,4 @@
-package com.gb.stopwatch
+package com.gb.stopwatch.usecase
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow

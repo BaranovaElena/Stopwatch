@@ -1,4 +1,4 @@
-package com.gb.stopwatch
+package com.gb.stopwatch.entites
 
 sealed class StopwatchState {
     data class Paused(val elapsedTime: Long) : StopwatchState()
